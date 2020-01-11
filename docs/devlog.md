@@ -41,3 +41,6 @@
     - tried various power sources; plugging USB-C directly from big computer motherboard allowed it to boot properly (albeit with periodic `Under-voltage detected!` errors and a yellow lightning bolt warning on the screen)
     - proper power supply ordered (known issue with raspberry pi 4)
     - installing `lubuntu` GUI to play around with
+- `usbip` still failing on separate machines (with raspberry pi as host) - uninformative errors, might just be broken in general (many people reporting similar issues with no resolution)
+- next steps:
+    - explore other options for USB redirection - set up spice on VM and raspberry pi
