@@ -1,4 +1,4 @@
-# Daily log of activities
+# Log of activities
 
 ## 01-09-2020
 
@@ -44,3 +44,18 @@
 - `usbip` still failing on separate machines (with raspberry pi as host) - uninformative errors, might just be broken in general (many people reporting similar issues with no resolution)
 - next steps:
     - explore other options for USB redirection - set up spice on VM and raspberry pi
+
+
+## week ending with 01-17-2020
+
+- tested various streaming protocols this week
+- `spice` works poorly for video/games, well for desktop; with USB devices properly forwarded, keyboard/mouse inputs are sensible and relatively quick; without USB forwarding games are practically unplayable with mouse 
+- streaming youtube from `spice` on powerful computer was actually better in quality than running youtube locally on the raspberry pi
+- VLC/youtube players are not hardware accelerated on raspberry pi; e.g. playing a 4k sample clip on VLC is choppy, but using `omxplayer` (which uses the `h264` decoder on the rpi4) runs smoothly
+- tried streaming UDP from OBS to `omxplayer` on raspberry pi; dropped packets frequently, but quality would be okay (significantly delayed - approx 6 seconds); packet loss led to very odd artefacts
+- tested steamlink: works very well from windows or mac to rpi4, although certain actions (alt-tabbing, etc.) could sometimes lock everything up; steamlink from ubuntu would hang after 3 seconds (probably some sort of graphics issue from ubuntu; most suggestions online related to changing video settings or installing drivers; did not find a working configuration, though)
+- tried to test NDI locally on powerful computer (no easy NDI monitor for raspberry pi/arm): found a project with a simple monitor, but was only built for the NDI 3.8 SDK, while you can only download the NDI 4.1 SDK now; there is a unity plugin built for NDI 4.X that we will try next
+- next steps:
+    - test NDI locally on ubuntu (find linux viewer for NDI 4.X, or build unity program separately)
+    - test other, promising streaming protocols: moonlight (uses reverse-engineered nvidia gamestream, requires nvidia card, but code is open source), or parsec (works on any platform, free, but code not available)
+    - parsec not yet working on rpi4, but compatible with rpi<=3; will test with raspberry pi 3 to check performance
