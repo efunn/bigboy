@@ -26,7 +26,7 @@ class delayTester(object):
         self.CURSOR_DELAY_BIG_STEP = 5 # ms
         self.PULSE_INTERVAL = 1000 # in ms
         self.PULSE_INTERVAL = self.PULSE_INTERVAL/1000.
-        self.PULSE_DURATION = 50 # in ms
+        self.PULSE_DURATION = 150 # in ms
         self.PULSE_DURATION = self.PULSE_DURATION/1000.
 
 
@@ -77,10 +77,12 @@ class delayTester(object):
         self.cursor_delay_fade = self.cursor_fade_function(self.cursor_delay_time)
 
     def cursor_fade_function(self, cursor_time):
-        if cursor_time < self.PULSE_DURATION:
-            cursor_fade = 1
-        else:
+        if cursor_time < 0.5*self.PULSE_DURATION:
+            cursor_fade = cursor_time/float(0.5*self.PULSE_DURATION)
+        elif cursor_time > self.PULSE_DURATION:
             cursor_fade = 0
+        else:
+            cursor_fade = 1-(cursor_time-0.5*self.PULSE_DURATION)/float(0.5*self.PULSE_DURATION)
         return cursor_fade
 
     def draw_cursor(self):
