@@ -24,8 +24,8 @@ class delayTester(object):
         self.CURSOR_DELAY_BIG_STEP = 5 # ms
         self.NUM_TICKS = 7
         self.TICK_HEIGHT_IN_PX = 3
-        self.TICK_WIDTH_IN_PX = .25*self.SCREEN_WIDTH
-        self.CURSOR_HEIGHT_IN_PX = 20
+        self.TICK_WIDTH_IN_PX = .1*self.SCREEN_WIDTH
+        self.CURSOR_HEIGHT_IN_PX = 15
         self.CURSOR_WIDTH_IN_PX = .75*self.TICK_WIDTH_IN_PX 
 
         # variables
