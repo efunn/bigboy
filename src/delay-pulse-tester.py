@@ -10,12 +10,12 @@ class delayTester(object):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.FRAME_RATE = 60
-        # self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1920, 1080
-        # self.screen = pygame.display.set_mode(
-        #     (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.FULLSCREEN)
-        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 800, 800
+        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1920, 1080
         self.screen = pygame.display.set_mode(
-            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.FULLSCREEN)
+        # self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 800, 800
+        # self.screen = pygame.display.set_mode(
+        #     (self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.BG_COLOR = 40,40,40
         self.TICK_COLOR = 150,150,150
         self.CURSOR_COLOR = 20,200,20
@@ -41,7 +41,8 @@ class delayTester(object):
                 self.quit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    self.cursor_moving = not(self.cursor_moving)
+                    pass
+                    # self.cursor_moving = not(self.cursor_moving)
                 if event.key == pygame.K_1:
                     self.cursor_delay += self.CURSOR_DELAY_BIG_STEP
                 if event.key == pygame.K_2:
