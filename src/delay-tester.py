@@ -82,8 +82,8 @@ class delayTester(object):
         y_coords_lhs = [self.cursor_ypos, self.cursor_ypos+self.CURSOR_HEIGHT_IN_PX, self.cursor_ypos-self.CURSOR_HEIGHT_IN_PX]
         x_coords_rhs = [self.SCREEN_WIDTH, self.SCREEN_WIDTH-self.CURSOR_WIDTH_IN_PX, self.SCREEN_WIDTH-self.CURSOR_WIDTH_IN_PX]
         y_coords_rhs = [self.cursor_delay_ypos, self.cursor_delay_ypos+self.CURSOR_HEIGHT_IN_PX, self.cursor_delay_ypos-self.CURSOR_HEIGHT_IN_PX]
-        draw_filled_aapoly(self.screen, zip(x_coords_lhs, y_coords_lhs), self.CURSOR_COLOR)
-        draw_filled_aapoly(self.screen, zip(x_coords_rhs, y_coords_rhs), self.CURSOR_COLOR)
+        draw_filled_aapoly(self.screen, list(zip(x_coords_lhs, y_coords_lhs)), self.CURSOR_COLOR)
+        draw_filled_aapoly(self.screen, list(zip(x_coords_rhs, y_coords_rhs)), self.CURSOR_COLOR)
 
     def draw_background(self):
         self.screen.fill(self.BG_COLOR)
@@ -98,12 +98,12 @@ def draw_tick(screen, width, height, color, screen_width, y):
 def draw_left_rect(screen, width, half_height, color, x, y):
     x_coords = [x+width, x+width, x, x]
     y_coords = [y-half_height, y+half_height, y+half_height, y-half_height]
-    draw_filled_aapoly(screen, zip(x_coords, y_coords), color)
+    draw_filled_aapoly(screen, list(zip(x_coords, y_coords)), color)
 
 def draw_right_rect(screen, width, half_height, color, x, y):
     x_coords = [x, x, x-width, x-width]
     y_coords = [y-half_height, y+half_height, y+half_height, y-half_height]
-    draw_filled_aapoly(screen, zip(x_coords, y_coords), color)
+    draw_filled_aapoly(screen, list(zip(x_coords, y_coords)), color)
 
 def draw_filled_aapoly(screen, coords, color):
     pygame.gfxdraw.filled_polygon(screen, coords, color)
