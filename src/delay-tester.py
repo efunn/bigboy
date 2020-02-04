@@ -10,9 +10,9 @@ class delayTester(object):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.FRAME_RATE = 60
-        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 800, 800
+        self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1920, 1080
         self.screen = pygame.display.set_mode(
-            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.FULLSCREEN)
         self.BG_COLOR = 40,40,40
         self.TICK_COLOR = 150,150,150
         self.CURSOR_COLOR = 20,200,20
