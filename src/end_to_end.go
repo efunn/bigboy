@@ -11,13 +11,13 @@ import (
 	"github.com/cretz/go-scrap"
 
 	"image"
+	// "image/draw"
 
-	"time"
+	// "time"
 
-	// "golang.org/x/exp/shiny/driver"
-	// "golang.org/x/exp/shiny/screen"
-	// "golang.org/x/exp/shiny/widget"
-
+	"golang.org/x/exp/shiny/driver"
+	"golang.org/x/exp/shiny/screen"
+	"golang.org/x/exp/shiny/widget"
 )
 
 // This example records the current screen
@@ -29,6 +29,24 @@ func main() {
 	fmt.Println("Starting stream... press enter to exit...")
 	errCh := make(chan error, 2)
 	ctx, cancelFn := context.WithCancel(context.Background())
+
+	// set up TCP server for receiving data
+	ln, err := net.Listen("tcp", "127.0.0.1:8080")
+	if err != nil {
+		panic(err)
+	}
+	defer ln.Close()
+	// listen for connections in background
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				panic(err)
+			}
+			go handleConnection(conn)
+		}
+	}()
+
 	// Record
 	go func() { errCh <- recordToStream(ctx) }()
 	// Wait for enter
@@ -36,7 +54,7 @@ func main() {
 		fmt.Scanln()
 		errCh <- nil
 	}()
-	err := <-errCh
+	err = <-errCh
 	cancelFn()
 	if err != nil && err != context.Canceled {
 		log.Fatalf("Execution failed: %v", err)
@@ -53,25 +71,6 @@ func recordToStream(ctx context.Context) error {
 		return err
 	}
 
-	// set up TCP server for receiving data
-	ln, err := net.Listen("tcp", "127.0.0.1:8080")
-	if err != nil {
-		return err
-	}
-	frameLenEncodingBuf := make([]byte, 4) // 32 bit value
-	defer ln.Close()
-
-	// listen for connections in background
-	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				// handle error
-			}
-			go handleConnection(conn)
-		}
-	}()
-
 	// set up TCP connection for sending data
 	conn, err := net.Dial("tcp", "127.0.0.1:8080")
 	if err != nil {
@@ -79,6 +78,7 @@ func recordToStream(ctx context.Context) error {
 	}
 
 	// Just start sending a bunch of frames
+	frameLenEncodingBuf := make([]byte, 4) // 32 bit value
 	for {
 		// Get the frame...
 		if pix, _, err := cap.Frame(); err != nil {
@@ -96,7 +96,7 @@ func recordToStream(ctx context.Context) error {
 				}
 			}
 			if err != nil {
-				return err
+				panic(err)
 			}
 		}
 		// Check if we're done, otherwise go again
@@ -121,7 +121,10 @@ func capturer() (*scrap.Capturer, error) {
 }
 
 func handleConnection(conn net.Conn) {
-	// fmt.Println("Connected...")
+	screenWidth  := 1920
+	screenHeight := 1200
+	screenRect := image.Rect(0,0,screenWidth,screenHeight)
+	screenImage := image.NewRGBA(screenRect)
 	bufReader := bufio.NewReader(conn)
 
 	// read the frame length
@@ -134,7 +137,6 @@ func handleConnection(conn net.Conn) {
 			panic(err)
 		}
 		frameLenBytesRead += bytesRead
-		// fmt.Printf("Read %v bytes for frame length...\n", bytesRead)
 		if frameLenBytesRead == frameLenLen {
 			break
 		}
@@ -147,37 +149,25 @@ func handleConnection(conn net.Conn) {
 	for {
 		bytesRead, _ := bufReader.Read(readFrameBuf[frameBytesRead : readFrameLen])
 		frameBytesRead += bytesRead
-		// fmt.Printf("Read %v bytes of pixel data...\n", bytesRead)
 		if uint32(frameBytesRead) == readFrameLen {
 			break
 		}
 	}
-	// fmt.Println("Frame complete!\n")
-	
-	img := image.NewRGBA(image.Rect(0,0,1920,1200))
-	fmt.Printf("Image pixel size: %v\n", len(img.Pix))
-	time.Sleep(2*time.Second)
+	screenImage.Pix = []uint8(readFrameBuf)
 
-	// drawFrameBuf := make([]byte, readFrameLen)
-	// copy(drawFrameBuf, readFrameBuf)
-
-
-	// img := image.NewRGBA(image.Rect(0,0,1920,1200))
-	// time.Sleep(2*time.Second)
-	// img := image.NewRGBA(image.Rect(0,0,800,800))
-	// img.Pix = []uint8(drawFrameBuf)
-	// fmt.Printf("Image pixel size: %v\n", len(img.Pix))
-	// fmt.Printf("Buffer size: %v\n", len(drawFrameBuf))
-
-	// driver.Main(func(s screen.Screen) {
-	// 	w := widget.NewSheet(widget.NewImage(img, img.Bounds()))
-	// 	if err := widget.RunWindow(s, w, &widget.RunWindowOptions{
-	// 		NewWindowOptions: screen.NewWindowOptions{
-	// 			Title: "ImageView Shiny Example",
-	// 		},
-	// 	}); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// })
+	driver.Main(func(s screen.Screen) {
+		w := widget.NewSheet(widget.NewImage(screenImage, screenImage.Bounds()))
+		if err := widget.RunWindow(s, w, &widget.RunWindowOptions{
+			NewWindowOptions: screen.NewWindowOptions{
+				Width: screenWidth,
+				Height: screenHeight,
+				Title: "Scrap Shiny Example",
+			},
+		}); err != nil {
+			log.Fatal(err)
+		}
+	})
 }
+
+
 
