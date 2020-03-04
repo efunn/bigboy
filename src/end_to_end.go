@@ -68,6 +68,7 @@ func main() {
 		screenImage.Pix[pixIndex] = pix
 		pixIndex += 1
 	}
+	ConvertBGRA(screenImage.Pix)
 
 	// main shiny graphics
 	driver.Main(func(s screen.Screen) {
@@ -187,6 +188,15 @@ func handleConnection(conn net.Conn, pixChan chan uint8) {
 		pixChan <- readFrameBuf[pixIndex]
 	}
 	close(pixChan)
+}
+
+func ConvertBGRA(p []uint8) {
+	if len(p)%4 != 0 {
+		panic("input slice length is not a multiple of 4")
+	}
+	for i := 0; i < len(p); i += 4 {
+		p[i+0], p[i+2] = p[i+2], p[i+0]
+	}
 }
 
 
