@@ -65,6 +65,13 @@ func main() {
 	// wait for frame status from reader
 	<-frameStatusChan
 
+	// repeatedly read frames (for testing)
+	// for {
+	// 	start_time := time.Now()
+	// 	<-frameStatusChan
+	// 	fmt.Printf("frame: %v\n", time.Now().Sub(start_time))
+	// }
+
 	// swap (swizzle) blue and red pixel values
 	ConvertBGRA(screenImage.Pix)
 
@@ -128,6 +135,8 @@ func recordToStream(ctx context.Context) error {
 			if err != nil {
 				panic(err)
 			}
+			// need to remove this to capture more than once
+			// if receiving only one frame, need this return or it breaks
 			return(err)
 		}
 		// Check if we're done, otherwise go again
