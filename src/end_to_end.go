@@ -29,11 +29,11 @@ func main() {
 	screenHeight := 1080
 	screenRect := image.Rect(0,0,screenWidth,screenHeight)
 	screenImage := image.NewRGBA(screenRect)
-	frameLen := uint32(4 * screenWidth * screenHeight) // RGBA = 4 * width * height
-	pixChan := make(chan uint8, 4 * frameLen) // extra length to buffer data
+	frameStatusChan := make(chan bool) // dummy channel to ensure data transfer
 
 	// Stream to shiny window and wait for enter key asynchronously
-	fmt.Println("Starting stream... press enter to exit...")
+	// exit on enter key currently broken
+	fmt.Println("Starting application... ctrl-c to exit...")
 	errCh := make(chan error, 2)
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -50,7 +50,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			go handleConnection(conn, pixChan)
+			go handleConnection(conn, frameStatusChan, screenImage.Pix)
 		}
 	}()
 
@@ -62,10 +62,8 @@ func main() {
 		errCh <- nil
 	}()
 
-	// dumb read each pixel to screenImage without closing channel
-	for pixIndex := 0; pixIndex < int(frameLen); pixIndex++ {
-		screenImage.Pix[pixIndex] = <-pixChan
-	}
+	// wait for frame status from reader
+	<-frameStatusChan
 
 	// swap (swizzle) blue and red pixel values
 	ConvertBGRA(screenImage.Pix)
@@ -130,7 +128,7 @@ func recordToStream(ctx context.Context) error {
 			if err != nil {
 				panic(err)
 			}
-			// return(err)
+			return(err)
 		}
 		// Check if we're done, otherwise go again
 		select {
@@ -154,7 +152,7 @@ func capturer() (*scrap.Capturer, error) {
 	}
 }
 
-func handleConnection(conn net.Conn, pixChan chan uint8) {
+func handleConnection(conn net.Conn, frameStatusChan chan bool, frameBuffer []uint8) {
 	bufReader := bufio.NewReader(conn)
 
 	// read the frame length
@@ -174,20 +172,15 @@ func handleConnection(conn net.Conn, pixChan chan uint8) {
 
 	// read the frame according to frame length
 	readFrameLen := binary.BigEndian.Uint32(frameLenBuf)
-	readFrameBuf := make([]byte, readFrameLen)
 	frameBytesRead := 0
 	for {
-		// write directly to channel here?
-		bytesRead, _ := bufReader.Read(readFrameBuf[frameBytesRead : readFrameLen])
+		bytesRead, _ := bufReader.Read(frameBuffer[frameBytesRead : readFrameLen])
 		frameBytesRead += bytesRead
 		if uint32(frameBytesRead) == readFrameLen {
 			break
 		}
 	}
-	// dumb write each pixel to channel
-	for pixIndex := 0; pixIndex < int(readFrameLen); pixIndex++ {
-		pixChan <- readFrameBuf[pixIndex]
-	}
+	frameStatusChan <- true
 }
 
 func ConvertBGRA(p []uint8) {
