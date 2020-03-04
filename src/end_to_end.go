@@ -30,7 +30,7 @@ func main() {
 	screenRect := image.Rect(0,0,screenWidth,screenHeight)
 	screenImage := image.NewRGBA(screenRect)
 	frameLen := uint32(4 * screenWidth * screenHeight) // RGBA = 4 * width * height
-	pixChan := make(chan uint8, 4*frameLen)
+	pixChan := make(chan uint8, 4 * frameLen) // extra length to buffer data
 
 	// Stream to shiny window and wait for enter key asynchronously
 	fmt.Println("Starting stream... press enter to exit...")
@@ -62,12 +62,12 @@ func main() {
 		errCh <- nil
 	}()
 
-	// dumb read each pixel to screenImage pixels
-	pixIndex := 0
-	for pix := range pixChan {
-		screenImage.Pix[pixIndex] = pix
-		pixIndex += 1
+	// dumb read each pixel to screenImage without closing channel
+	for pixIndex := 0; pixIndex < int(frameLen); pixIndex++ {
+		screenImage.Pix[pixIndex] = <-pixChan
 	}
+
+	// swap (swizzle) blue and red pixel values
 	ConvertBGRA(screenImage.Pix)
 
 	// main shiny graphics
@@ -84,7 +84,8 @@ func main() {
 		}
 	})
 
-	// handle exit here (???)
+	// TODO: handle exit here
+	// (execution never gets this far, driver.Main does not return yet)
 	err = <-errCh
 	cancelFn()
 	if err != nil && err != context.Canceled {
@@ -187,7 +188,6 @@ func handleConnection(conn net.Conn, pixChan chan uint8) {
 	for pixIndex := 0; pixIndex < int(readFrameLen); pixIndex++ {
 		pixChan <- readFrameBuf[pixIndex]
 	}
-	close(pixChan)
 }
 
 func ConvertBGRA(p []uint8) {
