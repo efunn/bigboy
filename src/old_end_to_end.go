@@ -11,28 +11,23 @@ import (
 	"github.com/cretz/go-scrap"
 
 	"image"
+	// "image/draw"
+
+	// "time"
 
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/exp/shiny/widget"
 
-	// "time"
+	"runtime"
 )
 
 // This example records the current screen
 // and streams it to a shiny window
 
 func main() {
-
-	// set up graphics (hardcoded dimensions for now)
-	screenWidth  := 1920
-	screenHeight := 1080
-	screenRect := image.Rect(0,0,screenWidth,screenHeight)
-	screenImage := image.NewRGBA(screenRect)
-	frameLen := uint32(4 * screenWidth * screenHeight) // RGBA = 4 * width * height
-	pixChan := make(chan uint8, 4*frameLen)
-
 	// Stream to shiny window and wait for enter key asynchronously
+
 	fmt.Println("Starting stream... press enter to exit...")
 	errCh := make(chan error, 2)
 	ctx, cancelFn := context.WithCancel(context.Background())
@@ -50,7 +45,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			go handleConnection(conn, pixChan)
+			go handleConnection(conn)
 		}
 	}()
 
@@ -61,29 +56,6 @@ func main() {
 		fmt.Scanln()
 		errCh <- nil
 	}()
-
-	// dumb read each pixel to screenImage pixels
-	pixIndex := 0
-	for pix := range pixChan {
-		screenImage.Pix[pixIndex] = pix
-		pixIndex += 1
-	}
-
-	// main shiny graphics
-	driver.Main(func(s screen.Screen) {
-		w := widget.NewSheet(widget.NewImage(screenImage, screenImage.Bounds()))
-		if err := widget.RunWindow(s, w, &widget.RunWindowOptions{
-			NewWindowOptions: screen.NewWindowOptions{
-				Width: screenWidth,
-				Height: screenHeight,
-				Title: "Scrap Shiny Example",
-			},
-		}); err != nil {
-			log.Fatal(err)
-		}
-	})
-
-	// handle exit here (???)
 	err = <-errCh
 	cancelFn()
 	if err != nil && err != context.Canceled {
@@ -128,7 +100,6 @@ func recordToStream(ctx context.Context) error {
 			if err != nil {
 				panic(err)
 			}
-			// return(err)
 		}
 		// Check if we're done, otherwise go again
 		select {
@@ -139,7 +110,6 @@ func recordToStream(ctx context.Context) error {
 		default:
 		}
 	}
-	return(err)
 }
 
 func capturer() (*scrap.Capturer, error) {
@@ -152,7 +122,11 @@ func capturer() (*scrap.Capturer, error) {
 	}
 }
 
-func handleConnection(conn net.Conn, pixChan chan uint8) {
+func handleConnection(conn net.Conn) {
+	screenWidth  := 1920
+	screenHeight := 1080
+	screenRect := image.Rect(0,0,screenWidth,screenHeight)
+	screenImage := image.NewRGBA(screenRect)
 	bufReader := bufio.NewReader(conn)
 
 	// read the frame length
@@ -175,18 +149,26 @@ func handleConnection(conn net.Conn, pixChan chan uint8) {
 	readFrameBuf := make([]byte, readFrameLen)
 	frameBytesRead := 0
 	for {
-		// write directly to channel here?
 		bytesRead, _ := bufReader.Read(readFrameBuf[frameBytesRead : readFrameLen])
 		frameBytesRead += bytesRead
 		if uint32(frameBytesRead) == readFrameLen {
 			break
 		}
 	}
-	// dumb write each pixel to channel
-	for pixIndex := 0; pixIndex < int(readFrameLen); pixIndex++ {
-		pixChan <- readFrameBuf[pixIndex]
-	}
-	close(pixChan)
+	screenImage.Pix = []uint8(readFrameBuf)
+
+	driver.Main(func(s screen.Screen) {
+		w := widget.NewSheet(widget.NewImage(screenImage, screenImage.Bounds()))
+		if err := widget.RunWindow(s, w, &widget.RunWindowOptions{
+			NewWindowOptions: screen.NewWindowOptions{
+				Width: screenWidth,
+				Height: screenHeight,
+				Title: "Scrap Shiny Example",
+			},
+		}); err != nil {
+			log.Fatal(err)
+		}
+	})
 }
 
 
