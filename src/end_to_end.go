@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -15,27 +14,22 @@ import (
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/exp/shiny/widget"
-
-	// "time"
 )
 
 // This example records the current screen
-// and streams it to a shiny window
+// and sends a single frame to a shiny window
 
 func main() {
-
 	// set up graphics (hardcoded dimensions for now)
+	// change dimensions to match primary display
 	screenWidth  := 1920
 	screenHeight := 1080
 	screenRect := image.Rect(0,0,screenWidth,screenHeight)
 	screenImage := image.NewRGBA(screenRect)
-	frameStatusChan := make(chan bool) // dummy channel to ensure data transfer
+	frameStatusChan := make(chan bool)
 
-	// Stream to shiny window and wait for enter key asynchronously
-	// exit on enter key currently broken
+	// should add exit condition for recordToStream() here
 	fmt.Println("Starting application... ctrl-c to exit...")
-	errCh := make(chan error, 2)
-	ctx, cancelFn := context.WithCancel(context.Background())
 
 	// set up TCP server for receiving data
 	ln, err := net.Listen("tcp", "127.0.0.1:8080")
@@ -54,23 +48,11 @@ func main() {
 		}
 	}()
 
-	// Record
-	go func() { errCh <- recordToStream(ctx) }()
-	// Wait for enter
-	go func() {
-		fmt.Scanln()
-		errCh <- nil
-	}()
+	// start recording
+	go recordToStream()
 
-	// wait for frame status from reader
+	// wait for frame status from reader (single frame)
 	<-frameStatusChan
-
-	// repeatedly read frames (for testing)
-	// for {
-	// 	start_time := time.Now()
-	// 	<-frameStatusChan
-	// 	fmt.Printf("frame: %v\n", time.Now().Sub(start_time))
-	// }
 
 	// swap (swizzle) blue and red pixel values
 	ConvertBGRA(screenImage.Pix)
@@ -88,20 +70,9 @@ func main() {
 			log.Fatal(err)
 		}
 	})
-
-	// TODO: handle exit here
-	// (execution never gets this far, driver.Main does not return yet)
-	err = <-errCh
-	cancelFn()
-	if err != nil && err != context.Canceled {
-		log.Fatalf("Execution failed: %v", err)
-	}
 }
 
-func recordToStream(ctx context.Context) error {
-	ctx, cancelFn := context.WithCancel(ctx)
-	defer cancelFn()
-
+func recordToStream() error {
 	// Create the capturer
 	cap, err := capturer()
 	if err != nil {
@@ -139,14 +110,8 @@ func recordToStream(ctx context.Context) error {
 			// if receiving only one frame, need this return or it breaks
 			return(err)
 		}
-		// Check if we're done, otherwise go again
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		// case err := <-errCh:
-		// 	return err
-		default:
-		}
+		// should add exit condition here
+		// (was done with case <-ctx.Done() previously)
 	}
 	return(err)
 }
