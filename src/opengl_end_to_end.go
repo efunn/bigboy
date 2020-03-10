@@ -12,11 +12,11 @@ import (
 
 	// OpenGL and GLFW requirements
 	"unsafe"
-    "runtime"
-    "github.com/go-gl/glfw/v3.3/glfw"
-    "github.com/go-gl/gl/v4.1-core/gl"
+	"runtime"
+	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/gl/v4.1-core/gl"
 
-    // sample shader/texture stuff
+	// sample shader/texture stuff
 	"github.com/cstegel/opengl-samples-golang/basic-textures/gfx"
 )
 
@@ -24,8 +24,8 @@ import (
 // and sends a single frame to a shiny window
 
 func main() {
-    // lock thread for GLWF/OpenGL (must be at top of main)
-    runtime.LockOSThread()
+	// lock thread for GLWF/OpenGL (must be at top of main)
+	runtime.LockOSThread()
 
 	// set up graphics (hardcoded dimensions for now)
 	// change dimensions to match primary display
@@ -60,29 +60,29 @@ func main() {
 
 	// GLFW with OpenGL graphics
 
-    // initialize GLFW library
-    if err := glfw.Init(); err != nil {  
-        panic(fmt.Errorf("could not initialize glfw: %v", err)) 
-    }
+	// initialize GLFW library
+	if err := glfw.Init(); err != nil {  
+		panic(fmt.Errorf("could not initialize glfw: %v", err)) 
+	}
 
-    // OpenGL context hints
-    glfw.WindowHint(glfw.ContextVersionMajor, 4) 
-    glfw.WindowHint(glfw.ContextVersionMinor, 1) 
-    glfw.WindowHint(glfw.Resizable, glfw.True) 
-    glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile) 
-    glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+	// OpenGL context hints
+	glfw.WindowHint(glfw.ContextVersionMajor, 4) 
+	glfw.WindowHint(glfw.ContextVersionMinor, 1) 
+	glfw.WindowHint(glfw.Resizable, glfw.True) 
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile) 
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-    // create GLFW window and context
-    win, err := glfw.CreateWindow(screenWidth, screenHeight, "Scrap OpenGL example", nil, nil)
-    if err != nil {  
-        panic(fmt.Errorf("could not create opengl renderer: %v", err))
-    }
-    win.MakeContextCurrent()
+	// create GLFW window and context
+	win, err := glfw.CreateWindow(screenWidth, screenHeight, "Scrap OpenGL example", nil, nil)
+	if err != nil {  
+		panic(fmt.Errorf("could not create opengl renderer: %v", err))
+	}
+	win.MakeContextCurrent()
 
-    // initialize OpenGL
-    if err := gl.Init(); err != nil {
-       panic(err)
-    }
+	// initialize OpenGL
+	if err := gl.Init(); err != nil {
+	   panic(err)
+	}
 
 	// the linked shader program determines how the data will be rendered
 	vertShader, err := gfx.NewShaderFromFile("shaders/basic.vert", gl.VERTEX_SHADER)
