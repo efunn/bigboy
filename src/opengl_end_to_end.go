@@ -18,6 +18,9 @@ import (
 
 	// sample shader/texture stuff
 	"github.com/cstegel/opengl-samples-golang/basic-textures/gfx"
+
+	// debugging stuff
+	// "time"
 )
 
 // This example records the current screen
@@ -83,6 +86,9 @@ func main() {
 	if err := gl.Init(); err != nil {
 	   panic(err)
 	}
+
+	// enable sRGB for gamma correction
+	gl.Enable(gl.FRAMEBUFFER_SRGB)
 
 	// the linked shader program determines how the data will be rendered
 	vertShader, err := gfx.NewShaderFromFile("shaders/basic.vert", gl.VERTEX_SHADER)
@@ -186,7 +192,7 @@ func recordToStream() error {
 	for {
 		// Get the frame...
 		if pix, _, err := cap.Frame(); err != nil {
-			return err
+			panic(err)
 		} else if pix != nil {
 			frameLen := uint32(4 * cap.Width() * cap.Height())
 			binary.BigEndian.PutUint32(frameLenEncodingBuf, frameLen)
@@ -196,7 +202,7 @@ func recordToStream() error {
 			rowLen := 4 * cap.Width() // RGBA = 4 * width
 			for i := 0; i < len(pix); i += stride {
 				if _, err = conn.Write(pix[i : i+rowLen]); err != nil {
-					break
+					panic(err)
 				}
 			}
 			if err != nil {
@@ -205,6 +211,7 @@ func recordToStream() error {
 		}
 		// should add exit condition here
 		// (was done with case <-ctx.Done() previously)
+		// time.Sleep(1 * time.Second) // slow frames for debugging
 	}
 	return(err)
 }
